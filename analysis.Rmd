@@ -1,19 +1,21 @@
 ---
-title: "bioRxiv"
+title: "A look at bioRxiv preprints"
 author: "Tim Stuart"
 date: "2 March 2016"
-output: html_document
+layout: post
+output:
+  html_document:
+    toc: true
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## bioRxiv preprints
-
 After posting a my first [preprint](http://biorxiv.org/content/early/2016/02/21/039511) to biorxiv a few weeks ago, I have been periodically checking the number of views and PDF downloads. I became interested to see how many downloads or views the preprints on biorxiv typically get, but this type of information isn't actually available. Altmetric must track this data, as it will tell you how a particular preprint ranks in relation to others, but that data hasn't been made publicly available (as far as I can tell).
 
-Not to worry, a little python script I wrote will scrape this information from the biorxiv website and record it in a file.
+Not to worry, a little [python script](https://github.com/timoast/biorxivData/blob/master/scrape_biorxiv.py) I wrote will scrape this information from the biorxiv website and record it in a file.
 
 Let's take a look at the data.
 
@@ -23,7 +25,7 @@ library(ggplot2)
 library(readr)
 library(lubridate)
 
-data <- read_tsv("data/biorxiv_data_2016_2_29.tsv")
+data <- read_tsv("./data/biorxiv_data_2016_2_29.tsv")
 collection_date <- ymd("2016_2_29")
 
 str(data)
@@ -78,7 +80,7 @@ knitr::kable(top10)  # output as nicely formatted table
 
 Let's first filter out preprints less than 10 days old, as these probably have an artificially low number of views.
 
-```{r dist, echo=TRUE, message=FALSE, warning=FALSE}
+```{r dist, echo=TRUE, fig.height=4, fig.width=5, message=FALSE, warning=FALSE}
 older_than_10 <- filter(data, Age > 10)
 quantile(older_than_10$`PDF views`, na.rm =TRUE)
 
@@ -88,7 +90,7 @@ ggplot(older_than_10, aes(`PDF views`)) +
 
 This would be better looked at on a log scale:
 
-``` {r pdf views}
+```{r pdf, fig.height=4, fig.width=5, message=FALSE, warning=FALSE}
 ggplot(older_than_10, aes(log(`PDF views`))) +
   ggtitle("PDF views") +
   geom_density(fill = 'blue', alpha = 0.5) + theme_bw() +
@@ -96,7 +98,7 @@ ggplot(older_than_10, aes(log(`PDF views`))) +
   geom_vline(xintercept = log(331))  # my paper
 ```
 
-```{r abstracts, message=FALSE, warning=FALSE}
+```{r abstracts, fig.height=4, fig.width=5, message=FALSE, warning=FALSE}
 ggplot(older_than_10, aes(log(`Abstract views`))) +
   ggtitle("Abstract views") +
   geom_density(fill = 'blue', alpha = 0.5) + theme_bw() +
@@ -106,5 +108,4 @@ ggplot(older_than_10, aes(log(`Abstract views`))) +
 
 The red line in both plots show the median, the black line show the datapoint for my own preprint posted a few weeks ago. It seems to have done slightly better than most others.
 
-There's plenty more I could look at, but for now this satifies my basic curiosity. I've posted the data and code on GitHub, so interested people can download and play with it themselves.
-
+There's plenty more I could look at, but for now this satifies my basic curiosity. I've posted the data and code on [GitHub](https://github.com/timoast/biorxivData), so interested people can download and play with it themselves.
