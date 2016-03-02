@@ -13,9 +13,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-After posting a my first [preprint](http://biorxiv.org/content/early/2016/02/21/039511) to biorxiv a few weeks ago, I have been periodically checking the number of views and PDF downloads. I became interested to see how many downloads or views the preprints on biorxiv typically get, but this type of information isn't actually available. Altmetric must track this data, as it will tell you how a particular preprint ranks in relation to others, but that data hasn't been made publicly available (as far as I can tell).
+After posting a my first [preprint](http://biorxiv.org/content/early/2016/02/21/039511) to [bioRxiv](http://biorxiv.org/) a few weeks ago, I have been periodically checking the number of views and PDF downloads. I became interested to see how many downloads or views the preprints on bioRxiv typically get, but this type of information isn't actually available. What are the all-time top bioRxiv preprints? How many people are  reading bioRxiv preprints on average? No-one knows! Altmetric must track this data, as it will tell you how a particular preprint ranks in relation to others, but that data hasn't been made publicly available (as far as I can tell).
 
-Not to worry, a little [python script](https://github.com/timoast/biorxivData/blob/master/scrape_biorxiv.py) I wrote will scrape this information from the biorxiv website and record it in a file.
+Not to worry, a little [python script](https://github.com/timoast/biorxivData/blob/master/scrape_biorxiv.py) I wrote will scrape this information from the biorxiv website and record it in a file. I ran it on the 29th February this year and collected a snapshot of biorxiv metrics at that time.
 
 Let's take a look at the data.
 
@@ -43,9 +43,32 @@ data <-  data %>%
 str(data)
 ```
 
-### bioRxiv metrics
+### Submissions over time
 
-How many preprints are revised at some stage?
+bioRxiv has supposedly been [growing in popularity](https://quantixed.wordpress.com/2015/12/11/white-label-the-growth-of-biorxiv/), let's take a look at the rate of submissions over time.
+
+First group into weeks:
+
+```{r time, fig.height=4, fig.width=5, message=FALSE, warning=FALSE}
+weekly <- data %>%
+  mutate(weeks_past = ceiling(Age / 7),
+         `Submission week` = collection_date - weeks(weeks_past)) %>%
+  group_by(`Submission week`) %>%
+  summarise(Submissions = n())
+
+ggplot(weekly, aes(`Submission week`, Submissions)) +
+  geom_point(stat = "identity") +
+  geom_smooth() +
+  ggtitle("bioRxiv submissions per week") +
+  theme_bw()
+```
+
+So the rate of submission really is increasing.
+
+### Some bioRxiv metrics
+
+bioRxiv allows you to submit a revision at any time (until the paper is published in a peer-reviewed journal). How many preprints are revised at some stage?
+
 ```{r revised}
 data %>%
   group_by(Revised) %>%
@@ -55,6 +78,7 @@ data %>%
 So only 28% are ever revised.
 
 What's the average number of abstract views and PDF downloads for preprints?
+
 ```{r views}
 abstr_mn <- mean(data$`Abstract views`, na.rm = T)
 abstr_med <- median(data$`Abstract views`, na.rm = T)
@@ -64,7 +88,7 @@ pdf_med <- median(data$`PDF views`, na.rm = T)
 
 The mean number of abstract views was `r round(abstr_mn)`, and the median was `r round(abstr_med)`. For PDF views, it was `r round(pdf_mn)` and `r round(pdf_med)`.
 
-The mean seems to be pulled up by some outliers with very high numbers of views.
+The mean seems to be pulled up by some outliers with very high numbers of views. Let's take a look at what those are.
 
 ### Top 10 bioRxiv preprints
 
@@ -75,6 +99,8 @@ top10 <- data %>%
   head(., 10)
 knitr::kable(top10)  # output as nicely formatted table
 ```
+
+All interesting papers, most of which are now published in journals.
 
 ### Distribution of views
 
