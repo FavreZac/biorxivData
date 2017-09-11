@@ -42,8 +42,8 @@ def get_paper_links(url):
                 elif len(i.a.string) < 5:
                     pass
                 else:
-                    links.append({"title": i.a.string, 
-                                  "link": i.a["href"]})
+                    links.append({"title": i.a.string,
+                                  "link": "http://biorxiv.org" + i.a["href"]})
     return links
 
 def get_metrics(url):
@@ -73,8 +73,15 @@ def get_metrics(url):
     current_version = "_".join(url.split("/")[5:8])
     # get metrics
     if len(views) >= 3:  # should be at least 3 fields, otherwise too new for metrics
-        abstract = views[1].text
-        pdf = views[2].text
+        abstract = 0
+        pdf = 0
+        for i in range(len(views)):
+            if i % 3 == 1:
+                abstract += int(views[i].text)
+            elif i % 3 == 2:
+                pdf += int(views[i].text)
+        abstract = str(abstract)
+        pdf = str(pdf)
     else:
         abstract = "NA"
         pdf = "NA"
