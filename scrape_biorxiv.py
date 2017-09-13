@@ -64,8 +64,7 @@ def get_metrics(url):
         "September": "09",
         "October": "10",
         "November": "11",
-        "December": "12"
-    }
+        "December": "12"}
     metrics = make_soup(url + ".article-metrics")
     info = make_soup(url + ".article-info")
     views = metrics.findAll("td")
@@ -89,16 +88,25 @@ def get_metrics(url):
     if len(versions) > 0:
         for v in versions:
             for i in v.findAll("li"):
-                try:
-                    i.a.string
-                except:
-                    oldest = current_version
+                if i.span:
+                    if "(" in i.span.string:
+                        month, day, year = i.span.string.replace("(", ")").split(")")[1].split(" ")[:3]
+                        month = months[month]
+                        day = day.strip(",")
+                        oldest = "_".join([year, month, day])
+                        break
                 else:
-                    s = str(i.a.string)
-                    month, day, year = s.replace("(", ")").split(")")[1].split(" ")[:3]
-                    month = months[month]
-                    day = day.strip(",")
-                    oldest = "_".join([year, month, day])
+                    try:
+                        i.a.string
+                    except:
+                        oldest = current_version
+                    else:
+                        s = str(i.a.string)
+                        month, day, year = s.replace("(", ")").split(")")[1].split(" ")[:3]
+                        month = months[month]
+                        day = day.strip(",")
+                        oldest = "_".join([year, month, day])
+
     else:
         oldest = current_version
     return [abstract, pdf, current_version, oldest]
@@ -118,30 +126,25 @@ for page in pages:
     all_papers += get_paper_links(page)
     sleep(1)
 
-for i in all_papers:
-    try:
-        get_metrics(i["link"])
-    except:
-        sleep(5)
-    else:
-        pass
-    abstract, pdf, current, oldest = get_metrics(i["link"])
-    i["abstract"] = abstract
-    i["pdf"] = pdf
-    i["current"] = current
-    i["oldest"] = oldest
-    sleep(1)
-
 now = datetime.now()
 date = str(now.year) + "_" + str(now.month) + "_" + str(now.day)
 
 with open("biorxiv_data_" + date + ".tsv", "w+") as outfile:
     outfile.write("Title\tURL\tAbstract views\tPDF views\tOriginal submission\tCurrent submission\n")
+
     for i in all_papers:
+        try:
+            get_metrics(i["link"])
+        except:
+            sleep(5)
+        else:
+            pass
+        abstract, pdf, current, oldest = get_metrics(i["link"])
         s = i['title'] + "\t" + \
             i['link'] + "\t" + \
-            i['abstract'] + "\t" + \
-            i["pdf"] + "\t" + \
-            i["oldest"] + "\t" + \
-            i["current"] + "\n"
+            abstract + "\t" + \
+            pdf + "\t" + \
+            oldest + "\t" + \
+            current + "\n"
         outfile.write(s.encode("UTF-8"))
+        sleep(1)
